@@ -1,8 +1,8 @@
 [submodule "cthackers"]
     path = jt/vendor/github.com/cthackers/go
-    url = git://github.com/cthackers/go
+    url = git://github.com/cthackers/go.git
 
 
 [submodule "cthackers"]
     path = jt/vendor/github.com/lxq/lzma
-    url = git://github.com/lxq/lzma
+    url = git://github.com/lxq/lzma.git
