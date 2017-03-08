@@ -53,7 +53,7 @@ func (n *ElementPropertyTable) Read(c *model.Context) error {
 	}
 	for {
 		objectId := c.Data.Int32()
-		if objectId  == 0 {
+		if objectId  == 0 || c.Data.GetError() != nil {
 			break
 		}
 		n.Values[objectId] = c.Data.Int32()

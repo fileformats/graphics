@@ -64,6 +64,10 @@ func (n *LateLoadedPropertyAtom) Read(c *model.Context) error {
 	return c.Data.GetError()
 }
 
+func (n *LateLoadedPropertyAtom) Value() interface{} {
+	return n.PayloadObjectId
+}
+
 func (n *LateLoadedPropertyAtom) GetPropertyAtom() *BasePropertyAtom {
 	return &n.BasePropertyAtom
 }

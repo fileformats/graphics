@@ -1,12 +1,14 @@
 package elements
 
 import (
+	"bytes"
+	"compress/zlib"
+	"io/ioutil"
+
+	"github.com/cthackers/go/bitstream"
+	"github.com/fileformats/graphics/jt/codec"
 	"github.com/fileformats/graphics/jt/model"
 	"github.com/fileformats/graphics/jt/segments/quantize"
-	"github.com/fileformats/graphics/jt/codec"
-	"github.com/cthackers/go/bitstream"
-	"bytes"
-	"compress/flate"
 )
 
 // Vertex Shape LOD Element represents LODs defined by collections of vertices.
@@ -42,8 +44,11 @@ type VertexShapeLOD struct {
 	Uncompressed bool
 
 	Normals []model.Vector3D
-	Normal []float32
-	Vertex []float32
+	Vertex []model.Vector3D
+	Faces  []int32
+
+	normals []float32
+	vertex []float32
 }
 
 func (n VertexShapeLOD) GUID() model.GUID {
@@ -81,7 +86,9 @@ func (n *VertexShapeLOD) ReadCompressedData(c *model.Context) (err error) {
 	n.ColorBinding = c.Data.UInt8()
 	c.Log("ColorBinding: %d", n.ColorBinding)
 
-	(&n.QuantizationParam).Read(c)
+	if err := (&n.QuantizationParam).Read(c); err != nil {
+		return err
+	}
 
 	if n.PrimitiveListIndices, err = (&codec.Int32CDP{}).ReadVecI32(c); err != nil {
 		return err
@@ -98,8 +105,75 @@ func (n *VertexShapeLOD) ReadCompressedData(c *model.Context) (err error) {
 		if err := (&n.RawVertexData).Read(c, n.NormalBinding, n.TextureCoordBinding, n.ColorBinding); err != nil {
 			return err
 		}
-		n.Normals = n.RawVertexData.QuantVertexNorm.Normals
 	}
+
+	var numVertices int32
+	var numFaces int32
+
+	for i := 0; i < len(n.PrimitiveListIndices) - 1; i++ {
+		start := n.PrimitiveListIndices[i]
+		end := n.PrimitiveListIndices[i + 1]
+		numVertices += end - start
+		numFaces += end - start - 2
+	}
+
+	n.Faces = make([]int32, numFaces*3)
+
+	if n.Uncompressed {
+		var k int32
+		for i := 0; i < len(n.PrimitiveListIndices) - 1; i++ {
+			start := n.PrimitiveListIndices[i]
+			end := n.PrimitiveListIndices[i + 1]
+			for f := start; f < end-2; f++ {
+				if f % 2 == 0 {
+					n.Faces[k] = f
+					n.Faces[k+1] = f + 1
+					n.Faces[k+2] = f + 2
+				} else {
+					n.Faces[k] = f
+					n.Faces[k+2] = f + 1
+					n.Faces[k+1] = f + 2
+				}
+				k+=3
+			}
+		}
+	} else {
+		n.vertex = make([]float32, numVertices*3)
+		n.normals = make([]float32, numVertices*3)
+
+		var k int32
+		for i := 0; i < len(n.PrimitiveListIndices) - 1; i++ {
+			start := n.PrimitiveListIndices[i]
+			end := n.PrimitiveListIndices[i + 1]
+
+			for v := start; v < end; v++ {
+				j := v*3
+				idx := n.RawVertexData.VertexDataIndices[v]
+				n.vertex[j] = n.RawVertexData.QuantVertexCoord.XVertexCoordCodes[idx]
+				n.vertex[j+1] = n.RawVertexData.QuantVertexCoord.YVertexCoordCodes[idx]
+				n.vertex[j+2] = n.RawVertexData.QuantVertexCoord.ZVertexCoordCodes[idx]
+				n.Vertex = append(n.Vertex, model.Vector3D{n.vertex[j], n.vertex[j+1], n.vertex[j+2]})
+
+				n.normals[j] = n.RawVertexData.QuantVertexNorm.Normals[idx].X
+				n.normals[j+1] = n.RawVertexData.QuantVertexNorm.Normals[idx].Y
+				n.normals[j+2] = n.RawVertexData.QuantVertexNorm.Normals[idx].Z
+				n.Normals = append(n.Normals, model.Vector3D{n.normals[j], n.normals[j+1], n.normals[j+2]})
+			}
+			for f := start; f < end - 2; f++ {
+				if f % 2 == 0 {
+					n.Faces[k] = f
+					n.Faces[k+1] = f + 1
+					n.Faces[k+2] = f + 2
+				} else {
+					n.Faces[k] = f
+					n.Faces[k+2] = f + 1
+					n.Faces[k+1] = f + 2
+				}
+				k+=3
+			}
+		}
+	}
+
 	c.Log("Uncompressed: %v", n.Uncompressed)
 	c.Log("RawVertexData: %v", n.RawVertexData.QuantVertexCoord)
 
@@ -113,12 +187,19 @@ func (n *VertexShapeLOD) readLosslessRawVertexData(c *model.Context) error {
 	compressedSize := c.Data.Int32()
 	c.Log("CompressedSize: %d", compressedSize)
 	var r = c.Data
+
 	if compressedSize > 0 {
 		data := make([]byte, compressedSize)
-		fr := flate.NewReader(bytes.NewReader(data))
+		c.Data.Unpack(data)
+		fr, _ := zlib.NewReader(bytes.NewReader(data))
+		// fr := flate.NewReader(bytes.NewReader(data))
 		defer fr.Close()
 
-		r = bitstream.NewReaderBE(fr)
+		data, err := ioutil.ReadAll(fr)
+		if err != nil {
+			return err
+		}
+		r = bitstream.NewReaderBE(bytes.NewReader(data))
 		r.ByteOrder(c.Data.GetByteOrder())
 	}
 
@@ -127,8 +208,8 @@ func (n *VertexShapeLOD) readLosslessRawVertexData(c *model.Context) error {
 	numVertices := int(n.PrimitiveListIndices[numFaces])
 	c.Log("NumVertices: %d", numVertices)
 
-	normal := make([]float32, numVertices*3)
-	vertex := make([]float32, numVertices*3)
+	n.normals = make([]float32, numVertices * 3)
+	n.vertex = make([]float32, numVertices * 3)
 
 	for i := 0; i < numVertices; i++ {
 		j := i * 3
@@ -136,18 +217,22 @@ func (n *VertexShapeLOD) readLosslessRawVertexData(c *model.Context) error {
 
 		}
 		if n.ColorBinding == 1 {
-			c.Log("Color:", r.Float32())
-			c.Log("Color:", r.Float32())
-			c.Log("Color:", r.Float32())
+			x := r.Float32()
+			x = r.Float32()
+			x = r.Float32()
+			_ = x
 		}
 		if n.NormalBinding == 1 {
-			normal[j] = r.Float32()
-			normal[j+1] = r.Float32()
-			normal[j+2] = r.Float32()
+			n.normals[j] = r.Float32()
+			n.normals[j+1] = r.Float32()
+			n.normals[j+2] = r.Float32()
+			n.Normals = append(n.Normals, model.Vector3D{n.normals[j], n.normals[j+1], n.normals[j+2]})
 		}
-		vertex[j] = r.Float32()
-		vertex[j+1] = r.Float32()
-		vertex[j+2] = r.Float32()
+
+		n.vertex[j] = r.Float32()
+		n.vertex[j+1] = r.Float32()
+		n.vertex[j+2] = r.Float32()
+		n.Vertex = append(n.Vertex, model.Vector3D{n.vertex[j], n.vertex[j+1], n.vertex[j+2]})
 	}
 
 	return c.Data.GetError()

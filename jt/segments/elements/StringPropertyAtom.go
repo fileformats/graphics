@@ -12,7 +12,7 @@ type StringPropertyAtom struct {
 	// Version Number is the version identifier for this data collection
 	VersionNumber uint8
 	// Value contains the character string value for this property atom
-	Value model.MbString
+	StrValue model.MbString
 }
 
 func (n StringPropertyAtom) GUID() model.GUID {
@@ -39,12 +39,17 @@ func (n *StringPropertyAtom) Read(c *model.Context) error {
 	}
 	c.Log("VersionNumber: %d", n.VersionNumber)
 
-	if err := (&n.Value).Read(c); err != nil {
+	if err := (&n.StrValue).Read(c); err != nil {
 		return err
 	}
-	c.Log("Value: %s", n.Value)
+	c.Log("Value: %s", n.StrValue)
 
 	return c.Data.GetError()
+}
+
+
+func (n *StringPropertyAtom) Value() interface{} {
+	return n.StrValue.String()
 }
 
 func (n *StringPropertyAtom) GetPropertyAtom() *BasePropertyAtom {

@@ -12,8 +12,10 @@ import (
 	"encoding/binary"
 )
 
-var versionPattern = regexp.MustCompile(`Version (\d+\.\d+) (.*)`)
-var Debug = true
+var (
+	versionPattern = regexp.MustCompile(`Version (\d+\.\d+) (.*)`)
+	Debug = true
+)
 
 func Load(filePath string) (*JTFile, error) {
 	f, err := os.Open(filePath)
@@ -30,6 +32,15 @@ func Load(filePath string) (*JTFile, error) {
 		jt.FileSize = uint64(info.Size())
 	}
 
+	if err := read(f, jt); err != nil {
+		return nil, err
+	}
+
+	return jt, nil
+}
+
+func Read(f io.ReadSeeker) (*JTFile, error) {
+	jt := &JTFile{FilePath: ""}
 	if err := read(f, jt); err != nil {
 		return nil, err
 	}

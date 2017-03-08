@@ -8,7 +8,7 @@ import (
 type FloatingPointPropertyAtom struct {
 	BasePropertyAtom
 	VersionNumber uint8
-	Value float32
+	FloatValue float32
 }
 
 func (n FloatingPointPropertyAtom) GUID() model.GUID {
@@ -35,10 +35,14 @@ func (n *FloatingPointPropertyAtom) Read(c *model.Context) error {
 		c.Log("VersionNumber: %d", n.VersionNumber)
 	}
 
-	n.Value = c.Data.Float32()
+	n.FloatValue = c.Data.Float32()
 	c.Log("Value: %f", n.Value)
 
 	return c.Data.GetError()
+}
+
+func (n *FloatingPointPropertyAtom) Value() interface{} {
+	return n.Value
 }
 
 func (n *FloatingPointPropertyAtom) GetPropertyAtom() *BasePropertyAtom {

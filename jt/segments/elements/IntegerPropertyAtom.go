@@ -8,7 +8,7 @@ import (
 type IntegerPropertyAtom struct {
 	BasePropertyAtom
 	VersionNumber uint8
-	Value int32
+	IntValue int32
 }
 
 func (n IntegerPropertyAtom) GUID() model.GUID {
@@ -35,10 +35,14 @@ func (n *IntegerPropertyAtom) Read(c *model.Context) error {
 		c.Log("VersionNumber: %d", n.VersionNumber)
 	}
 
-	n.Value = c.Data.Int32()
-	c.Log("Value: %f", n.Value)
+	n.IntValue = c.Data.Int32()
+	c.Log("Value: %f", n.IntValue)
 
 	return c.Data.GetError()
+}
+
+func (n *IntegerPropertyAtom) Value() interface{} {
+	return n.IntValue
 }
 
 func (n *IntegerPropertyAtom) GetPropertyAtom() *BasePropertyAtom {

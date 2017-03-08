@@ -1,9 +1,13 @@
 package model
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type Vector3D struct {
-	X, Y, Z float32
+	X float32 `json:"x"`
+	Y float32 `json:"y"`
+	Z float32 `json:"z"`
 }
 
 func (v Vector3D) String() string {
@@ -13,7 +17,8 @@ func (v Vector3D) String() string {
 // The BoundingBox type defines a bounding box using two Vector3D types to store the XYZ coordinates
 // for the bounding box minimum and maximum corner points.
 type BoundingBox struct {
-	Min, Max Vector3D
+	Min Vector3D `json:"min"`
+	Max Vector3D `json:"max"`
 }
 
 func (b BoundingBox) String() string {
@@ -21,7 +26,10 @@ func (b BoundingBox) String() string {
 }
 
 type HCoordF32 struct {
-	X, Y, Z, W float32
+	X float32 `json:"x"`
+	Y float32 `json:"y"`
+	Z float32 `json:"z"`
+	W float32 `json:"w"`
 }
 
 func (v HCoordF32) String() string {
@@ -29,7 +37,10 @@ func (v HCoordF32) String() string {
 }
 
 type HCoordF64 struct {
-	X, Y, Z, W float64
+	X float64 `json:"x"`
+	Y float64 `json:"y"`
+	Z float64 `json:"z"`
+	W float64 `json:"w"`
 }
 
 func (v HCoordF64) String() string {
@@ -66,6 +77,10 @@ func (m *MbString) Read(c *Context) error {
 	return c.Data.GetError()
 }
 
+func (m MbString) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`"%s"`, m.String())), nil
+}
+
 func (m MbString) String() string {
 	var tmp = "";
 	for _, i := range m {
@@ -89,8 +104,10 @@ type Matrix4F64 [16]float64
 // first three F32 define the plane unit normal vector (A, B, C) and the last F32 defines
 // the negated perpendicular distance (D), along normal vector, from the origin to the plane.
 type Plane struct {
-	A, B, C float32
-	D       float32
+	A float32 `json:"a"`
+	B float32 `json:"b"`
+	C float32 `json:"c"`
+	D float32 `json:"d"`
 }
 
 // The Quaternion type defines a 3-dimensional orientation (no translation) in quaternion
@@ -98,15 +115,29 @@ type Plane struct {
 // associated with the 4 dimensions of a quaternion (1 real dimension, and 3 imaginary
 // dimensions).  So the Quaternion type is made up of four F32 base types.
 type Quaternion struct {
-	A, B, C, D float32
+	A float32 `json:"a"`
+	B float32 `json:"b"`
+	C float32 `json:"c"`
+	D float32 `json:"d"`
 }
 
 // The RGB type defines a colour composed of Red, Green, Blue components, each of which is a F32.
 // So a RGB type is made up of three F32 base types.  The Red, Green, Blue colour values
 // typically range from 0.0 to 1.0.
 type RGB struct {
-	R, G, B float32
+	R float32 `json:"r"`
+	G float32 `json:"g"`
+	B float32 `json:"b"`
 }
+
+func (c RGB) RGBA() (uint32, uint32, uint32, uint32) {
+	return uint32(c.R * 100), uint32(c.G * 100), uint32(c.B * 100), 255
+}
+
+func (c RGB) Hex() string {
+	return fmt.Sprintf("#%2X%2X%2X", uint8(c.R * 100), uint8(c.G * 100), uint8(c.B * 100))
+}
+
 func (c RGB) String() string {
 	return fmt.Sprintf("RGB{R:%f, G:%f, B:%f}", c.R, c.G, c.B)
 }
@@ -116,7 +147,18 @@ func (c RGB) String() string {
 // typically range from 0.0 to 1.0.  The Alpha value ranges from 0.0 to 1.0 where 1.0
 // indicates completely opaque.
 type RGBA struct {
-	R, G, B, A float32
+	R float32 `json:"r"`
+	G float32 `json:"g"`
+	B float32 `json:"b"`
+	A float32 `json:"a"`
+}
+
+func (c RGBA) RGBA() (uint32, uint32, uint32, uint32) {
+	return uint32(c.R * 100), uint32(c.G * 100), uint32(c.B * 100), uint32(c.A * 100)
+}
+
+func (c RGBA) Hex() string {
+	return fmt.Sprintf("#%2X%2X%2X%X", uint8(c.R * 100), uint8(c.G * 100), uint8(c.B * 100), uint8(c.A * 100))
 }
 
 func (c RGBA) String() string {
@@ -124,13 +166,13 @@ func (c RGBA) String() string {
 }
 
 type Int32Range struct {
-	Min int32
-	Max int32
+	Min int32 `json:"min"`
+	Max int32 `json:"max"`
 }
 
 type Float32Range struct {
-	Min float32
-	Max float32
+	Min float32 `json:"min"`
+	Max float32 `json:"max"`
 }
 
 type VectorF32 []float32

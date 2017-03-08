@@ -38,9 +38,9 @@ import (
 // - 4 Blending Flag, Source Blending Factor, Destination Blending Factor
 // - 5 Override Vertex Color Flag
 type MaterialAttribute struct {
-	BaseAttribute
+	BaseAttribute `json:"-"`
 	// Version Number is the version identifier for this element
-	VersionNumber uint8
+	VersionNumber uint8 `json:"-"`
 	// Data Flags is a collection of flags and factor data. The flags and factor data are combined
 	// using the binary OR operator.  The flags store information to be used for interpreting
 	// how to read subsequent Material data fields
@@ -74,29 +74,29 @@ type MaterialAttribute struct {
 	//              = 8 – Interpret same as OpenGL GL_DST_ALPHA Blending Factor
 	//              = 9 – Interpret same as OpenGL GL_ONE_MINUS_DST_ALPHA Blending Factor
 	//              = 10 – Interpret same as OpenGL GL_SRC_ALPHA_SATURATE Blending Factor
-	DataFlags uint16
+	DataFlags uint16 `json:"type"`
 	// Ambient Colour specifies the ambient red, green, blue, alpha colour values of the material
-	AmbientColor model.RGBA
+	AmbientColor model.RGBA `json:"ambientColor"`
 	// Diffuse Colour and Alpha specify the diffuse red, green, blue colour components, and alpha value of the material.
-	DiffuseColor model.RGBA
+	DiffuseColor model.RGBA `json:"diffuseColor"`
 	// Specular Colour specifies the specular red, green, blue, alpha colour values of the material
-	SpecularColor model.RGBA
+	SpecularColor model.RGBA `json:"specularColor"`
 	// Emission Colour specifies the emissive red, green, blue, alpha colour values of the material
-	EmissionColor model.RGBA
+	EmissionColor model.RGBA `json:"emissionColor"`
 	// Shininess is the exponent associated with specular reflection and highlighting of the Phong specular lighting
 	// model. Shininess controls the degree with which the specular highlight decays.
 	// Only values in the range [1,128] are valid
-	Shininess float32
+	Shininess float32 `json:"shiness"`
 	// Reflectivity specifies the material reflectivity of the material. It represents the fraction of
 	// light reflected in the mirror direction by the material.
 	// Only values in the range [0.0, 1.0] are valid
-	Reflectivity float32
+	Reflectivity float32 `json:"reflectivity"`
 	// Bumpiness is used to control bump mapping, and specifies the degree to which bump mapping modifies the local normal vector.
 	// A value of 1.0 is the default.
 	// Values larger than 1.0 are intended to make the shaded object look as if it is more highly embossed;
 	// values between 0.0 and 1.0 make it look less so.
 	// Negative values are legal and make the object appear to be engraved rather than embossed
-	Bumpiness    float32
+	Bumpiness float32 `json:"bumpiness"`
 }
 
 func (n MaterialAttribute) GUID() model.GUID {
@@ -125,15 +125,14 @@ func (n *MaterialAttribute) Read(c *model.Context) error {
 	n.DataFlags = c.Data.UInt16()
 	c.Log("DataFlags: %d", n.DataFlags)
 
-	usePattern := n.DataFlags & 1 != 0
-	useAmbientPattern := n.DataFlags & 2 != 0
-	useSpecularPattern := n.DataFlags & 4 != 0
-	useEmissionPattern := n.DataFlags & 8 != 0
-
+	usePattern := n.DataFlags&1 != 0
+	useAmbientPattern := n.DataFlags&2 != 0
+	useSpecularPattern := n.DataFlags&4 != 0
+	useEmissionPattern := n.DataFlags&8 != 0
 
 	if usePattern && useAmbientPattern {
 		color := c.Data.Float32()
-		n.AmbientColor = model.RGBA{R:color, G:color, B:color, A:1}
+		n.AmbientColor = model.RGBA{R: color, G: color, B: color, A: 1}
 	} else {
 		c.Data.Unpack(&n.AmbientColor)
 	}
@@ -144,7 +143,7 @@ func (n *MaterialAttribute) Read(c *model.Context) error {
 
 	if usePattern && useSpecularPattern {
 		color := c.Data.Float32()
-		n.SpecularColor = model.RGBA{R:color, G:color, B:color, A:1}
+		n.SpecularColor = model.RGBA{R: color, G: color, B: color, A: 1}
 	} else {
 		c.Data.Unpack(&n.SpecularColor)
 	}
@@ -152,7 +151,7 @@ func (n *MaterialAttribute) Read(c *model.Context) error {
 
 	if usePattern && useEmissionPattern {
 		color := c.Data.Float32()
-		n.EmissionColor = model.RGBA{R:color, G:color, B:color, A:1}
+		n.EmissionColor = model.RGBA{R: color, G: color, B: color, A: 1}
 	} else {
 		c.Data.Unpack(&n.EmissionColor)
 	}

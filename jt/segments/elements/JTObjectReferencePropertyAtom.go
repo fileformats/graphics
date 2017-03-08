@@ -44,6 +44,11 @@ func (n *JTObjectReferencePropertyAtom) Read(c *model.Context) error {
 	return c.Data.GetError()
 }
 
+func (n *JTObjectReferencePropertyAtom) Value() interface {} {
+	return n.ObjectId
+}
+
+
 func (n *JTObjectReferencePropertyAtom) GetPropertyAtom() *BasePropertyAtom {
 	return &n.BasePropertyAtom
 }

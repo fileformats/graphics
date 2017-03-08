@@ -22,7 +22,6 @@ type LSGSegment struct {
 }
 
 func (l *LSGSegment) Read(context *model.Context) error {
-
 	l.SegmentData.ReadSegmentData(context)
 	// switch to segment context
 	context = l.Context
@@ -45,6 +44,10 @@ func (l *LSGSegment) Read(context *model.Context) error {
 func (l *LSGSegment) readGraphElements(context *model.Context) {
 	for {
 		element := elements.New(context)
+		if context.Data.GetError() != nil {
+			break
+		}
+
 		if element == nil {
 			context.Log("Unknown element")
 			continue
@@ -70,6 +73,9 @@ func (l *LSGSegment) readGraphElements(context *model.Context) {
 func (l *LSGSegment) readPropertyElements(context *model.Context) {
 	for {
 		element := elements.New(context)
+		if context.Data.GetError() != nil {
+			break
+		}
 		if element == nil {
 			context.Log("Unknown element")
 			continue
@@ -85,7 +91,6 @@ func (l *LSGSegment) readPropertyElements(context *model.Context) {
 		}
 	}
 }
-
 
 func (l *LSGSegment) generateGraph(context *model.Context) error {
 	context.LogGroup("Generate LSG graph")

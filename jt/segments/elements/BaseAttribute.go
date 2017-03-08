@@ -13,13 +13,13 @@ type BaseAttributeElement interface {
 // Attribute Elements (e.g. colour, texture, material, lights, etc.) are placed in LSG as objects associated with nodes.
 // Attribute Elements are not nodes themselves, but can be associated with any node.
 type BaseAttribute struct {
-	JTElement
+	JTElement `json:"-"`
 	// Object ID is the identifier for this Object.
 	// Other objects referencing this particular object do so using the Object ID
 	// NOTE: Deprecated. Only used in version ^8.0
-	ObjectId int32
+	ObjectId int32 `json:"-"`
 	// Version Number is the version identifier for this node
-	VersionNumber uint8
+	VersionNumber uint8 `json:"-"`
 	// State Flags is a collection of flags. The flags are combined using the binary OR operator and
 	// store various state information for Attribute Elements; such as indicating that the attributes
 	// accumulation is final.  All bits fields that are not defined as in use should be set to 0.
@@ -36,14 +36,14 @@ type BaseAttribute struct {
 	//   0x08 - Attribute Persistable Flag. Provides a way to indicate that the attribute is to be persistable to a JT file.
 	//          = 0 – Attribute is to be non-persistable.
 	//          = 1 – Attribute is to be persistable.
-	StateFlags uint8
+	StateFlags uint8 `json:"-"`
 	// Field Inhibit Flags is a collection of flags, each flag corresponding to a collection of state data
 	// within a particular Attribute type.
-	FieldInhibitFlags uint32
+	FieldInhibitFlags uint32 `json:"-"`
 	// Field Final Flags is a collection of flags, each flag being parallel to the corresponding flag in the
 	// Field Inhibit Flags. If the field‘s bit in Field Final Flags is set, then that field within the
 	// Attribute will become ―final and will not allow any subsequent accumulation into the specified field
-	FieldFinalFlags uint32
+	FieldFinalFlags uint32 `json:"-"`
 }
 
 func (n *BaseAttribute) GUID() model.GUID {

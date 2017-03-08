@@ -55,6 +55,10 @@ func (n *DatePropertyAtom) Read(c *model.Context) error {
 	return c.Data.GetError()
 }
 
+func (n *DatePropertyAtom) Value() interface {} {
+	return n.Time()
+}
+
 func (n *DatePropertyAtom) Time() time.Time {
 	return time.Date(
 		int(n.Year), time.Month(n.Month), int(n.Day),

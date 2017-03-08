@@ -3,6 +3,7 @@ package segments
 import (
 	"github.com/fileformats/graphics/jt/model"
 	"github.com/fileformats/graphics/jt/segments/elements"
+	"fmt"
 )
 
 // A Shape LOD Element is the holder/container of the geometric shape definition data (e.g. vertices, polygons, normals, etc.)
@@ -27,6 +28,14 @@ func (l *ShapeLODSegment) Read(context *model.Context) error {
 		l.Element = element
 	}
 	return context.Data.GetError()
+}
+
+func (l *ShapeLODSegment) GetGeometry() (*elements.TriStripSetShapeLOD, error) {
+	tri, ok := l.Element.(*elements.TriStripSetShapeLOD)
+	if !ok {
+		return nil, fmt.Errorf("Invalid Shape LOD element")
+	}
+	return tri, nil
 }
 
 func (l *ShapeLODSegment) GUID() model.GUID {

@@ -10,9 +10,11 @@ func TestReader(t *testing.T) {
 	if jt != nil || err == nil {
 		t.Fail()
 	}
-	jt, err = Load("./testdata/feder.jt")
+	jt, err = Load("./testdata/test.jt")
 	if err != nil {
 		t.Fail()
 	}
+	data, err := jt.ToJSON(LOD0)
+	fmt.Println("\n", string(data), err)
 	fmt.Print("\n\n\n")
 }

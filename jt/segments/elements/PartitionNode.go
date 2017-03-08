@@ -7,32 +7,32 @@ import (
 // A partition in a JT file must always be either the root or leaf node.
 // A leaf partition node represents an external JT file reference and provides a means to partition a model into multiple physical JT files
 type PartitionNode struct {
-	GroupNode
+	GroupNode `json:"-"`
 	// Partition Flags is a collection of flags.  The flags are combined using the binary OR operator.
 	// These flags store various state information of the Partition Node Object such as indicating
 	// the presence of optional data.
 	// All bits fields that are not defined as in use should be set to ―0
-	PartitionFlags int32
+	PartitionFlags int32 `json:"-"`
 	// File Name is the relative path portion of the Partition‘s file location. Where ―rleative path
 	// should be interpreted to mean the string contains the file name along with any additional path
 	// information that locates the partition JT file relative to the location of the referencing JT file
-	FileName model.MbString
+	FileName model.MbString `json:"filename"`
 	// The Transformed BBox is an MCS axis aligned bounding box and represents the transformed geometry
 	// extents for all geometry contained in the Partition Node.  This bounding box information may be
 	// used by a renderer of JT data to determine whether to load the data contained within the Partition
 	// node (i.e. is any part of the bounding box within the view frustum)
-	TransformedBBox   model.BoundingBox
-	Reserved          model.BoundingBox
-	UntransformedBBox model.BoundingBox
+	TransformedBBox   model.BoundingBox `json:"transformedBBox"`
+	Reserved          model.BoundingBox `json:"-"`
+	UntransformedBBox model.BoundingBox `json:"untransformedBBox"`
 	// Area is the total surface area for this node and all of its descendents.
 	// This value is stored in MCS coordinate space (i.e. values scaled by MCS scaling)
-	Area float32
+	Area float32 `json:"area"`
 	// Vertex Count Range is the aggregate minimum and maximum vertex count for all descendants of the Partition Node
-	VertexCountRange model.Int32Range
+	VertexCountRange model.Int32Range `json:"vertexCountRange"`
 	// Node Count Range is the aggregate minimum and maximum count of all node descendants of the Partition Node.
-	NodeCountRange model.Int32Range
+	NodeCountRange model.Int32Range `json:"nodeCountRange"`
 	// Polygon Count Range is the aggregate minimum and maximum polygon count for all descendants of the Partition Node.
-	PolygonCountRange model.Int32Range
+	PolygonCountRange model.Int32Range `json:"polyCountRange"`
 }
 
 func (n *PartitionNode) GUID() model.GUID {

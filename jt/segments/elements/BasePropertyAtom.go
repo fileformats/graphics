@@ -7,6 +7,7 @@ import (
 
 type BasePropertyAtomElement interface {
 	GetPropertyAtom() *BasePropertyAtom
+	Value() interface{}
 }
 
 // Base Property Atom Element represents the simplest form of a property that can exist within

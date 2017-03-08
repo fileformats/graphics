@@ -13,9 +13,9 @@ const (
 )
 
 type JTElement struct {
-	Id model.GUID
-	Length int32
-	Type model.ObjectBaseType
+	Id model.GUID `json:"-"`
+	Length int32 `json:"-"`
+	Type model.ObjectBaseType `json:"-"`
 }
 
 func (e *JTElement) Read(context *model.Context) error {
@@ -53,7 +53,11 @@ func New(context *model.Context) Element {
 	context.Log("Type: %d (%s)", jtElement.Type, jtElement.Type)
 
 	var element Element
-	
+
+	if context.Data.GetError() != nil {
+		return nil
+	}
+
 	switch jtElement.Id.String() {
 	case "ffffffff-ffff-ffff-ff-ff-ff-ff-ff-ff-ff-ff":
 		element = &EndOfElements{}
